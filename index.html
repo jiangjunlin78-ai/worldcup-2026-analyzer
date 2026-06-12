@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 世界杯数据分析模拟器</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --gold: #f0b90b;
+  --gold2: #c9970a;
+  --green: #3fb950;
+  --red: #f85149;
+  --blue: #58a6ff;
+  --accent: #1f6feb;
+  --radius: 8px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-bottom: 2px solid var(--gold);
+  padding: 24px 32px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #f0b90b, #fcd535, #f0b90b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header .subtitle {
+  color: var(--text2);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.header .date-badge {
+  display: inline-block;
+  background: rgba(240,185,11,0.15);
+  border: 1px solid rgba(240,185,11,0.3);
+  color: var(--gold);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Summary Bar */
+.summary-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 16px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 120px;
+  z-index: 99;
+}
+.summary-card {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+}
+.summary-card .label {
+  font-size: 12px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.summary-card .value {
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.summary-card .value.gold { color: var(--gold); }
+.summary-card .value.green { color: var(--green); }
+.summary-card .value.blue { color: var(--blue); }
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.toolbar .btn {
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font);
+  transition: all 0.15s;
+}
+.toolbar .btn:hover { background: var(--border); }
+.toolbar .btn.danger { border-color: var(--red); color: var(--red); }
+.toolbar .btn.danger:hover { background: rgba(248,81,73,0.15); }
+.toolbar .search-box {
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+  margin-left: auto;
+}
+.toolbar .search-box input {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+}
+.toolbar .search-box input::placeholder { color: var(--text2); }
+.toolbar .search-box input:focus { outline: none; border-color: var(--accent); }
+
+/* Empty hint */
+.empty-hint {
+  margin: 0 32px;
+  padding: 14px 20px;
+  background: rgba(31,111,235,0.08);
+  border: 1px solid rgba(31,111,235,0.25);
+  border-radius: var(--radius);
+  color: var(--text2);
+  font-size: 13px;
+  text-align: center;
+  display: none;
+}
+.empty-hint.show { display: block; }
+.empty-hint strong { color: var(--blue); }
+
+/* Disclaimer banner */
+.disclaimer-banner {
+  margin: 0 32px 12px;
+  padding: 10px 18px;
+  background: rgba(240,185,11,0.06);
+  border: 1px solid rgba(240,185,11,0.2);
+  border-radius: var(--radius);
+  color: var(--gold2);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Master Table */
+.container { padding: 16px 32px 40px; }
+.master-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.master-table thead th {
+  background: var(--surface2);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.master-table thead th.right { text-align: right; padding-right: 28px; }
+.master-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.master-table tbody tr { transition: background 0.1s; }
+.master-table tbody tr:hover { background: rgba(240,185,11,0.05) !important; }
+.master-table tbody tr:last-child td { border-bottom: none; }
+.master-table tbody td.right { text-align: right; }
+
+.group-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 13px;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.flag-cell { display: flex; align-items: center; gap: 10px; }
+.flag-cell img {
+  width: 30px;
+  height: 22px;
+  border-radius: 3px;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+.flag-cell .name { font-weight: 500; white-space: nowrap; }
+
+input[type="number"] {
+  width: 90px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+  text-align: right;
+  transition: border-color 0.15s;
+}
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(31,111,235,0.2);
+}
+input[type="number"].odds-input { width: 75px; }
+input[type="number"].stake-input { width: 110px; }
+input[type="number"]::placeholder { color: var(--text2); font-size: 11px; }
+.input-suffix { display: inline-flex; align-items: center; gap: 3px; }
+.suffix { color: var(--text2); font-size: 12px; font-weight: 500; }
+
+.reward-cell {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gold);
+  min-width: 90px;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--text2);
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@media (max-width: 768px) {
+  .header { padding: 16px; }
+  .header h1 { font-size: 20px; }
+  .summary-bar { grid-template-columns: repeat(2, 1fr); padding: 12px 16px; top: 90px; }
+  .toolbar { padding: 10px 16px; }
+  .container { padding: 10px 12px 30px; }
+  input[type="number"] { width: 70px; font-size: 12px; }
+  input[type="number"].stake-input { width: 85px; }
+  .master-table thead th, .master-table tbody td { padding: 8px 6px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>WORLD CUP 2026</h1>
+  <div class="subtitle">数据分析模拟器 · 48 支参赛球队</div>
+  <div class="date-badge">2026年6月11日 – 7月19日 · 美国 / 加拿大 / 墨西哥</div>
+</div>
+
+<div class="disclaimer-banner">
+  ⚠ 本工具为纯数学演算模拟器。所有数据均为虚构，不涉及真实货币、博彩或交易行为。
+</div>
+
+<div class="summary-bar" id="summaryBar">
+  <div class="summary-card">
+    <div class="label">总投入点数</div>
+    <div class="value gold" id="totalStake">0</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">已录入球队</div>
+    <div class="value blue" id="configuredTeams">0 / 48</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">最大理论分值</div>
+    <div class="value green" id="maxReturn">-</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">平均概率</div>
+    <div class="value" id="avgOdds" style="color:#e6edf3;">-</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button class="btn" onclick="randomFill()">随机填充示例</button>
+  <button class="btn danger" onclick="resetAll()">清空数据</button>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="搜索国家..." oninput="filterTeams()">
+  </div>
+</div>
+
+<div class="empty-hint" id="emptyHint">
+  尚未录入任何数据。点击 <strong>「随机填充示例」</strong> 快速体验，或直接在下方表格中输入 <strong>预测概率 (%)</strong> 与 <strong>投入点数</strong>。
+</div>
+
+<div class="container">
+  <table class="master-table" id="masterTable">
+    <thead>
+      <tr>
+        <th style="width:40px">#</th>
+        <th style="width:50px">组</th>
+        <th style="width:200px">国家</th>
+        <th class="right sortable" style="width:110px;cursor:pointer" onclick="sortTable('odds')">预测概率 (%) <span class="sort-arrow"></span></th>
+        <th class="right sortable" style="width:140px;cursor:pointer" onclick="sortTable('stake')">投入点数 <span class="sort-arrow"></span></th>
+        <th class="right sortable" style="width:150px;cursor:pointer" onclick="sortTable('reward')" title="纯数学演算，非真实回报">理论分值 <span class="sort-arrow"></span></th>
+        <th class="right" style="width:70px">评估</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="footer">
+  数据仅为模拟演示 · 不构成任何建议
+</div>
+
+<script>
+const TEAMS = [
+  { group:'A', name:'墨西哥', code:'mx' },
+  { group:'A', name:'南非', code:'za' },
+  { group:'A', name:'韩国', code:'kr' },
+  { group:'A', name:'捷克', code:'cz' },
+  { group:'B', name:'加拿大', code:'ca' },
+  { group:'B', name:'波黑', code:'ba' },
+  { group:'B', name:'卡塔尔', code:'qa' },
+  { group:'B', name:'瑞士', code:'ch' },
+  { group:'C', name:'巴西', code:'br' },
+  { group:'C', name:'摩洛哥', code:'ma' },
+  { group:'C', name:'海地', code:'ht' },
+  { group:'C', name:'苏格兰', code:'gb-sct' },
+  { group:'D', name:'美国', code:'us' },
+  { group:'D', name:'巴拉圭', code:'py' },
+  { group:'D', name:'澳大利亚', code:'au' },
+  { group:'D', name:'土耳其', code:'tr' },
+  { group:'E', name:'德国', code:'de' },
+  { group:'E', name:'库拉索', code:'cw' },
+  { group:'E', name:'科特迪瓦', code:'ci' },
+  { group:'E', name:'厄瓜多尔', code:'ec' },
+  { group:'F', name:'荷兰', code:'nl' },
+  { group:'F', name:'日本', code:'jp' },
+  { group:'F', name:'瑞典', code:'se' },
+  { group:'F', name:'突尼斯', code:'tn' },
+  { group:'G', name:'比利时', code:'be' },
+  { group:'G', name:'埃及', code:'eg' },
+  { group:'G', name:'伊朗', code:'ir' },
+  { group:'G', name:'新西兰', code:'nz' },
+  { group:'H', name:'西班牙', code:'es' },
+  { group:'H', name:'佛得角', code:'cv' },
+  { group:'H', name:'沙特阿拉伯', code:'sa' },
+  { group:'H', name:'乌拉圭', code:'uy' },
+  { group:'I', name:'法国', code:'fr' },
+  { group:'I', name:'塞内加尔', code:'sn' },
+  { group:'I', name:'伊拉克', code:'iq' },
+  { group:'I', name:'挪威', code:'no' },
+  { group:'J', name:'阿根廷', code:'ar' },
+  { group:'J', name:'阿尔及利亚', code:'dz' },
+  { group:'J', name:'奥地利', code:'at' },
+  { group:'J', name:'约旦', code:'jo' },
+  { group:'K', name:'葡萄牙', code:'pt' },
+  { group:'K', name:'民主刚果', code:'cd' },
+  { group:'K', name:'乌兹别克斯坦', code:'uz' },
+  { group:'K', name:'哥伦比亚', code:'co' },
+  { group:'L', name:'英格兰', code:'gb-eng' },
+  { group:'L', name:'克罗地亚', code:'hr' },
+  { group:'L', name:'加纳', code:'gh' },
+  { group:'L', name:'巴拿马', code:'pa' }
+];
+
+const STORAGE_KEY = 'wc2026_sim_data';
+
+const GROUP_COLORS = {
+  'A':'#f94144','B':'#f8961e','C':'#f9c74f','D':'#90be6d',
+  'E':'#43aa8b','F':'#577590','G':'#9b5de5','H':'#f15bb5',
+  'I':'#00bbf9','J':'#fee440','K':'#f86624','L':'#8ac926'
+};
+
+function getStorage() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function setStorage(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {} }
+
+function flagUrl(code) { return `https://flagcdn.com/w80/${code}.png`; }
+
+function formatMoney(v) {
+  if (v === null || v === undefined || v === '' || isNaN(v)) return '-';
+  return Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function updateSummary() {
+  const storage = getStorage();
+  let totalStake = 0, configured = 0, maxReturn = 0, totalOdds = 0, oddsCount = 0;
+
+  TEAMS.forEach(t => {
+    const d = storage[t.code] || {};
+    const stake = parseFloat(d.stake), odds = parseFloat(d.odds);
+    if (!isNaN(stake) && stake > 0) {
+      totalStake += stake; configured++;
+      if (!isNaN(odds) && odds > 0) { const r = stake * 100 / odds; if (r > maxReturn) maxReturn = r; }
+    }
+    if (!isNaN(odds) && odds > 0) { totalOdds += odds; oddsCount++; }
+  });
+
+  document.getElementById('totalStake').textContent = formatMoney(totalStake);
+  document.getElementById('configuredTeams').textContent = `${configured} / 48`;
+  document.getElementById('maxReturn').textContent = maxReturn > 0 ? formatMoney(maxReturn) : '-';
+  document.getElementById('avgOdds').textContent = oddsCount > 0 ? (totalOdds / oddsCount).toFixed(1) + '%' : '-';
+
+  const hint = document.getElementById('emptyHint');
+  if (configured === 0) { hint.classList.add('show'); }
+  else { hint.classList.remove('show'); }
+
+  TEAMS.forEach(t => {
+    const cell = document.getElementById('cmp-' + t.code);
+    if (!cell) return;
+    const d = storage[t.code] || {};
+    const stake = parseFloat(d.stake), odds = parseFloat(d.odds);
+    if (isNaN(stake) || stake <= 0 || isNaN(odds) || odds <= 0 || totalStake <= 0) {
+      cell.textContent = '';
+      return;
+    }
+    const reward = stake * 100 / odds;
+    if (reward >= totalStake) { cell.textContent = '✓'; cell.style.color = '#4caf50'; }
+    else { cell.textContent = '✗'; cell.style.color = '#f44336'; }
+  });
+}
+
+function updateReward(code) {
+  const storage = getStorage();
+  const d = storage[code] || {};
+  const stake = parseFloat(d.stake), odds = parseFloat(d.odds);
+  const cell = document.getElementById('reward-' + code);
+  if (!cell) return;
+  if (isNaN(stake) || stake <= 0) { cell.textContent = '-'; cell.style.color = 'var(--text2)'; }
+  else if (isNaN(odds) || odds <= 0) { cell.textContent = '需设置概率'; cell.style.color = 'var(--red)'; }
+  else { cell.textContent = formatMoney(stake * 100 / odds); cell.style.color = 'var(--gold)'; }
+  updateSummary();
+}
+
+function onOddsChange(code) {
+  const val = document.getElementById('odds-' + code).value;
+  const storage = getStorage();
+  if (!storage[code]) storage[code] = {};
+  storage[code].odds = val;
+  setStorage(storage);
+  updateReward(code);
+}
+
+function onStakeChange(code) {
+  const val = document.getElementById('stake-' + code).value;
+  const storage = getStorage();
+  if (!storage[code]) storage[code] = {};
+  storage[code].stake = val;
+  setStorage(storage);
+  updateReward(code);
+}
+
+function renderAll() {
+  const tbody = document.getElementById('tableBody');
+  const storage = getStorage();
+  let html = '';
+
+  TEAMS.forEach((t, i) => {
+    const d = storage[t.code] || {};
+    const oddsVal = d.odds || '';
+    const stakeVal = d.stake || '';
+    const color = GROUP_COLORS[t.group];
+    const rowStyle = i % 8 < 4 ? '' : 'style="background:rgba(255,255,255,0.01)"';
+    html += `<tr class="team-row" data-name="${t.name.toLowerCase()}" data-code="${t.code}" ${rowStyle}>`;
+    html += `<td class="row-num">${i + 1}</td>`;
+    html += `<td><span class="group-tag" style="background:${color}">${t.group}</span></td>`;
+    html += `<td><div class="flag-cell"><img src="${flagUrl(t.code)}" alt="${t.name}" loading="lazy" onerror="this.style.display='none'"><span class="name">${t.name}</span></div></td>`;
+    html += `<td class="right"><span class="input-suffix"><input type="number" class="odds-input" id="odds-${t.code}" placeholder="0-100" min="0.1" max="100" step="0.1" value="${oddsVal}" onchange="onOddsChange('${t.code}')"><span class="suffix">%</span></span></td>`;
+    html += `<td class="right"><input type="number" class="stake-input" id="stake-${t.code}" placeholder="点数" min="0" step="1" value="${stakeVal}" onchange="onStakeChange('${t.code}')"></td>`;
+    html += `<td class="right"><span class="reward-cell" id="reward-${t.code}">-</span></td>`;
+    html += `<td class="right"><span class="comparison-cell" id="cmp-${t.code}"></span></td>`;
+    html += `</tr>`;
+  });
+
+  tbody.innerHTML = html;
+  TEAMS.forEach(t => updateReward(t.code));
+  updateSummary();
+}
+
+function resetAll() {
+  if (!confirm('确定要清空所有预测概率和投入点数吗？此操作不可撤销。')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  renderAll();
+}
+
+function randomFill() {
+  if (!confirm('将随机填充所有48支球队的预测概率和投入点数（示例数据），确定吗？')) return;
+  const storage = {};
+  TEAMS.forEach(t => {
+    storage[t.code] = { odds: (Math.random() * 30 + 0.5).toFixed(1), stake: String(Math.floor(Math.random() * 9000 + 1000)) };
+  });
+  setStorage(storage);
+  renderAll();
+}
+
+function filterTeams() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const rows = document.querySelectorAll('.team-row');
+  let first = null;
+  rows.forEach(row => {
+    const match = !q || row.dataset.name.includes(q) || row.dataset.code.includes(q);
+    row.style.display = match ? '' : 'none';
+    if (match && !first) first = row;
+  });
+  if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); first.style.background = 'rgba(255,200,50,0.3)'; setTimeout(() => { first.style.background = ''; }, 2000); }
+}
+
+let sortState = { key: null, asc: true };
+function sortTable(key) {
+  if (sortState.key === key) { sortState.asc = !sortState.asc; } else { sortState.key = key; sortState.asc = true; }
+  const storage = getStorage();
+  const rows = Array.from(document.querySelectorAll('.team-row'));
+  const getVal = (row, k) => {
+    const code = row.dataset.code;
+    const d = storage[code] || {};
+    if (k === 'odds') return parseFloat(d.odds) || 0;
+    if (k === 'stake') return parseFloat(d.stake) || 0;
+    if (k === 'reward') { const o = parseFloat(d.odds); const s = parseFloat(d.stake); return (o && s) ? s * 100 / o : 0; }
+    return 0;
+  };
+  rows.sort((a, b) => sortState.asc ? getVal(a, key) - getVal(b, key) : getVal(b, key) - getVal(a, key));
+  const tbody = document.getElementById('tableBody');
+  rows.forEach(row => tbody.appendChild(row));
+  document.querySelectorAll('.team-row .row-num').forEach((td, i) => td.textContent = i + 1);
+  document.querySelectorAll('.sort-arrow').forEach(s => s.textContent = '');
+  const arrow = document.querySelector(`th.sortable[onclick="sortTable('${key}')"] .sort-arrow`);
+  if (arrow) arrow.textContent = sortState.asc ? ' ▲' : ' ▼';
+}
+
+renderAll();
+</script>
+
+<footer class="disclaimer" style="text-align:center; padding:24px 16px; color:#8b949e; font-size:12px; line-height:1.8; border-top:1px solid #21262d; margin-top:24px;">
+  免责声明：本页面为纯前端数据分析模拟器，所有数据（预测概率、投入点数、理论分值）均为虚构示例，<br>
+  不涉及任何真实货币、博彩业务或交易行为，仅供娱乐和技术参考。不构成任何投资建议。
+</footer>
+</body>
+</html>
